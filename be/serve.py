@@ -6,7 +6,8 @@ from flask import request
 from be.view import auth
 from be.view import seller
 from be.view import buyer
-from be.model.store import init_database
+#from be.model.store import init_database
+from initialize_db import init
 
 bp_shutdown = Blueprint("shutdown", __name__)
 
@@ -28,7 +29,7 @@ def be_run():
     this_path = os.path.dirname(__file__)
     parent_path = os.path.dirname(this_path)
     log_file = os.path.join(parent_path, "app.log")
-    init_database(parent_path)
+    init()
 
     logging.basicConfig(filename=log_file, level=logging.ERROR)
     handler = logging.StreamHandler()

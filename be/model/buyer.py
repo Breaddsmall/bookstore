@@ -1,12 +1,16 @@
 import sqlite3 as sqlite
+import sqlalchemy
 import uuid
 import json
 import logging
 from be.model import db_conn
 from be.model import error
+from flask import jsonify
+import threading
 
 
 class Buyer(db_conn.DBConn):
+
     def __init__(self):
         db_conn.DBConn.__init__(self)
 
@@ -22,8 +26,7 @@ class Buyer(db_conn.DBConn):
             for book_id, count in id_and_count:
                 cursor = self.conn.execute(
                     "SELECT book_id, stock_level, book_info FROM store "
-                    "WHERE store_id = ? AND book_id = ?;",
-                    (store_id, book_id))
+                    "WHERE store_id = '%s' AND book_id = '%s';"%(store_id, book_id))
                 row = cursor.fetchone()
                 if row is None:
                     return error.error_non_exist_book_id(book_id) + (order_id, )
@@ -37,28 +40,29 @@ class Buyer(db_conn.DBConn):
                     return error.error_stock_level_low(book_id) + (order_id,)
 
                 cursor = self.conn.execute(
-                    "UPDATE store set stock_level = stock_level - ? "
-                    "WHERE store_id = ? and book_id = ? and stock_level >= ?; ",
-                    (count, store_id, book_id, count))
+                    "UPDATE store set stock_level = stock_level - %d "
+                    "WHERE store_id = '%s' and book_id = '%s' and stock_level >= %d; "
+                    %(count, store_id, book_id, count))
                 if cursor.rowcount == 0:
                     return error.error_stock_level_low(book_id) + (order_id, )
 
                 self.conn.execute(
                         "INSERT INTO new_order_detail(order_id, book_id, count, price) "
-                        "VALUES(?, ?, ?, ?);",
-                        (uid, book_id, count, price))
+                        "VALUES('%s', '%s', %d, %d);"
+                        %(uid, book_id, count, price))#添加状态0，该订单为支付
 
             self.conn.execute(
                 "INSERT INTO new_order(order_id, store_id, user_id) "
-                "VALUES(?, ?, ?);",
-                (uid, store_id, user_id))
+                "VALUES('%s', '%s', '%s');"
+                %(uid, store_id, user_id))
             self.conn.commit()
             order_id = uid
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             logging.info("528, {}".format(str(e)))
             return 528, "{}".format(str(e)), ""
         except BaseException as e:
             logging.info("530, {}".format(str(e)))
+            print(e)
             return 530, "{}".format(str(e)), ""
 
         return 200, "ok", order_id
@@ -66,7 +70,7 @@ class Buyer(db_conn.DBConn):
     def payment(self, user_id: str, password: str, order_id: str) -> (int, str):
         conn = self.conn
         try:
-            cursor = conn.execute("SELECT order_id, user_id, store_id FROM new_order WHERE order_id = ?", (order_id,))
+            cursor = conn.execute("SELECT order_id, user_id, store_id FROM new_order WHERE order_id = '%s'"%(order_id))
             row = cursor.fetchone()
             if row is None:
                 return error.error_invalid_order_id(order_id)
@@ -78,7 +82,7 @@ class Buyer(db_conn.DBConn):
             if buyer_id != user_id:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute("SELECT balance, password FROM user WHERE user_id = ?;", (buyer_id,))
+            cursor = conn.execute("SELECT balance, password FROM usr WHERE user_id = '%s';"%(buyer_id))
             row = cursor.fetchone()
             if row is None:
                 return error.error_non_exist_user_id(buyer_id)
@@ -86,7 +90,7 @@ class Buyer(db_conn.DBConn):
             if password != row[1]:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = ?;", (store_id,))
+            cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id ='%s';"%(store_id))
             row = cursor.fetchone()
             if row is None:
                 return error.error_non_exist_store_id(store_id)
@@ -96,7 +100,7 @@ class Buyer(db_conn.DBConn):
             if not self.user_id_exist(seller_id):
                 return error.error_non_exist_user_id(seller_id)
 
-            cursor = conn.execute("SELECT book_id, count, price FROM new_order_detail WHERE order_id = ?;", (order_id,))
+            cursor = conn.execute("SELECT book_id, count, price FROM new_order_detail WHERE order_id = '%s';"% (order_id))
             total_price = 0
             for row in cursor:
                 count = row[1]
@@ -106,40 +110,39 @@ class Buyer(db_conn.DBConn):
             if balance < total_price:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE user set balance = balance - ?"
-                                  "WHERE user_id = ? AND balance >= ?",
-                                  (total_price, buyer_id, total_price))
+            cursor = conn.execute("UPDATE usr set balance = balance - %d"
+                                  "WHERE user_id = '%s' AND balance >= %d"
+                                  %(total_price, buyer_id, total_price))
             if cursor.rowcount == 0:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE user set balance = balance + ?"
-                                  "WHERE user_id = ?",
-                                  (total_price, buyer_id))
+            cursor = conn.execute("UPDATE usr set balance = balance + %d"
+                                  "WHERE user_id = '%s'"
+                                  %(total_price, buyer_id))
 
             if cursor.rowcount == 0:
                 return error.error_non_exist_user_id(buyer_id)
-
-            cursor = conn.execute("DELETE FROM new_order WHERE order_id = ?", (order_id, ))
+            cursor = conn.execute("DELETE FROM new_order WHERE order_id ='%s'"%(order_id))
             if cursor.rowcount == 0:
                 return error.error_invalid_order_id(order_id)
 
-            cursor = conn.execute("DELETE FROM new_order_detail where order_id = ?", (order_id, ))
+            cursor = conn.execute("DELETE FROM new_order_detail where order_id ='%s'"%(order_id))
             if cursor.rowcount == 0:
                 return error.error_invalid_order_id(order_id)
 
             conn.commit()
 
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
 
         except BaseException as e:
+            print(e)
             return 530, "{}".format(str(e))
-
         return 200, "ok"
 
     def add_funds(self, user_id, password, add_value) -> (int, str):
         try:
-            cursor = self.conn.execute("SELECT password  from user where user_id=?", (user_id,))
+            cursor = self.conn.execute("SELECT password from usr where user_id='%s'"%(user_id,))
             row = cursor.fetchone()
             if row is None:
                 return error.error_authorization_fail()
@@ -147,16 +150,33 @@ class Buyer(db_conn.DBConn):
             if row[0] != password:
                 return error.error_authorization_fail()
 
-            cursor = self.conn.execute(
-                "UPDATE user SET balance = balance + ? WHERE user_id = ?",
-                (add_value, user_id))
+            cursor = self.conn.execute("UPDATE usr SET balance = balance + %d WHERE user_id = '%s'"%(add_value, user_id))
             if cursor.rowcount == 0:
                 return error.error_non_exist_user_id(user_id)
 
             self.conn.commit()
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
+            print(e)
             return 530, "{}".format(str(e))
 
         return 200, "ok"
+
+    def receive(self, user_id:str,password:str,order_id:str)->(int,str):
+        row=self.conn.execute("SELECT status,buyer_id FROM new_order WHERE order_id='%s';"%(order_id)).fetchone()
+        if row is None:
+            return error.error_invalid_order_id(order_id)
+        if row[0]==0:
+            return 522,"未收货"
+        if row[0]==2:
+            return 523,"已收货"
+        if row[1]!=user_id:
+            return error.error_authorization_fail()
+        self.conn.execute("UPDATE new_order SET status=2 WHERE order_id='%s'"%(order_id))
+        self.conn.commit()
+        return 200,"ok"
+    #查找自己的所有订单
+    #def search_orde.r(self,user_id:str):
+
+
