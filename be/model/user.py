@@ -55,7 +55,7 @@ class User(db_conn.DBConn):
             logging.error(str(e))
             return False
 
-    def register(self, user_id: str, password: str):
+    def register(self, user_id: str, password: str)->(int,str):
         try:
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
@@ -68,9 +68,7 @@ class User(db_conn.DBConn):
 
     def check_token(self, user_id: str, token: str) -> (int, str):
         cursor = self.conn.execute("SELECT token from usr where user_id='%s'"%(user_id))
-        print(1)
         #cursor=self.conn.query(User).filter(User.user_id==user_id).get(token)
-        print(2)
         row = cursor.fetchone()
         if row is None:
             print("userid有误")
@@ -120,7 +118,7 @@ class User(db_conn.DBConn):
         print("登录成功")
         return 200, "ok", token
 
-    def logout(self, user_id: str, token: str) -> bool:
+    def logout(self, user_id: str, token: str) -> (int,str):
         try:
             code, message = self.check_token(user_id, token)
             if code != 200:
@@ -158,7 +156,7 @@ class User(db_conn.DBConn):
             return 530, "{}".format(str(e))
         return 200, "ok"
 
-    def change_password(self, user_id: str, old_password: str, new_password: str) -> bool:
+    def change_password(self, user_id: str, old_password: str, new_password: str) -> (int,str):
         try:
             code, message = self.check_password(user_id, old_password)
             if code != 200:
@@ -177,6 +175,7 @@ class User(db_conn.DBConn):
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
+
     def search_book(self,book_id):
 
 
