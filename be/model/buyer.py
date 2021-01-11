@@ -40,6 +40,8 @@ class Buyer(db_conn.DBConn):
                 book_info_json = json.loads(book_info)
                 price = book_info_json.get("price")
 
+                total_price += price*count
+
                 if stock_level < count:
                     return error.error_stock_level_low(book_id) + (order_id,)
 
