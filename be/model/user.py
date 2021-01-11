@@ -6,6 +6,7 @@ from be.model import error
 from be.model import db_conn
 import sqlalchemy
 import initialize_db
+import base64
 
 # encode a json string like:
 #   {
@@ -13,7 +14,6 @@ import initialize_db
 #       "terminal": [terminal code],
 #       "timestamp": [ts]} to a JWT
 #   }
-
 
 def jwt_encode(user_id: str, terminal: str) -> str:
     encoded = jwt.encode(
@@ -176,7 +176,254 @@ class User(db_conn.DBConn):
             return 530, "{}".format(str(e))
         return 200, "ok"
 
-    def search_book(self,book_id):
+    def search_author(self, author: str) -> (int, [dict]):  # 200,'ok',list[{str,str,str,str,list,bytes}]
+        ret = []
+        a = '%'
+        temp = author
+        b = '%'
+        c = a + temp + b
+        records = self.conn.execute(
+            " SELECT title,author,publisher,book_intro,tags FROM book WHERE author LIKE '%s' " % (
+                c)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+    def search_book_intro(self, book_intro: str) -> (int, [dict]):
+        ret = []
+        a = '%'
+        temp = book_intro
+        b = '%'
+        c = a + temp + b
+        records = self.conn.execute(
+            " SELECT title,author,publisher,book_intro,tags FROM book WHERE book_intro LIKE '%s' " % (
+                c)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+    def search_tags(self, tags: str) -> (int, [dict]):
+        ret = []
+        a = '%'
+        temp = tags
+        b = '%'
+        c = a + temp + b
+        records = self.conn.execute(
+            " SELECT title,author,publisher,book_intro,tags FROM book WHERE tags LIKE '%s' " % (
+                c)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+    def search_title(self, title: str) -> (int, [dict]):
+        ret = []
+        a = '%'
+        temp = title
+        b = '%'
+        c = a + temp + b
+        records = self.conn.execute(
+            " SELECT title,author,publisher,book_intro,tags FROM book WHERE title LIKE '%s' " % (
+                c)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+    def search_author_in_store(self, author: str, store_id: str) -> (int, [dict]):
+        ret = []
+        a = '%'
+        temp = author
+        b = '%'
+        c = a + temp + b
+        records = self.conn.execute(
+            " SELECT title,author,publisher,book_intro,tags FROM book WHERE author LIKE '%s' and book.id in (select book_id::int4 from store where store_id='%s')" % (
+                c, store_id)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+    def search_book_intro_in_store(self, book_intro: str, store_id: str) -> (int, [dict]):
+        ret = []
+        a = '%'
+        temp = book_intro
+        b = '%'
+        c = a + temp + b
+        records = self.conn.execute(
+            " SELECT title,author,publisher,book_intro,tags FROM book WHERE book_intro LIKE '%s' and book.id in (select book_id::int4 from store where store_id='%s') " % (
+                c, store_id)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+    def search_tags_in_store(self, tags: str, store_id: str) -> (int, [dict]):
+        ret = []
+        a = '%'
+        temp = tags
+        b = '%'
+        c = a + temp + b
+        records = self.conn.execute(
+            " SELECT title,author,publisher,book_intro,tags FROM book WHERE tags LIKE '%s' and book.id in (select book_id::int4 from store where store_id='%s')" % (
+                c, store_id)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+    def search_title_in_store(self, title: str, store_id: str) -> (int, [dict]):
+        ret = []
+        a = '%'
+        temp = title
+        b = '%'
+        c = a + temp + b
+        records = self.conn.execute(
+            " SELECT title,author,publisher,book_intro,tags FROM book WHERE title LIKE '%s' and book.id in (select book_id::int4 from store where store_id='%s') " % (
+                c, store_id)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
 
 
-        return 200, "ok"
+    def search_book_intro_index_version(self, book_intro: str) -> (int, [dict]):
+        ret = []
+        temp = book_intro
+        records = self.conn.execute(
+            "SELECT book.title,book.author,book.publisher,book.book_intro,book.tags FROM book WHERE book.id in (SELECT id FROM book_split WHERE fts @@ to_tsquery('%s'));" % (
+                temp)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+
+    def search_book_intro_index_version_in_store(self, book_intro: str, store_id: str) -> (int, [dict]):
+        ret = []
+        temp = book_intro
+        records = self.conn.execute(
+            "SELECT book.title,book.author,book.publisher,book.book_intro,book.tags FROM book WHERE book.id in (SELECT id FROM book_split WHERE fts @@ to_tsquery('%s')) and book.id in (select book_id::int4 from store where store_id='%s') ;" % (
+                temp,store_id)).fetchall()
+        if len(records) != 0:
+            for i in range(len(records)):
+                record = records[i]
+                title = record[0]
+                author = record[1]
+                publisher = record[2]
+                book_intro = record[3]
+                tags = record[4]
+                ret.append(
+                    {'title': title, 'author': author, 'publisher': publisher,
+                     'book_intro': book_intro,
+                     'tags': tags})
+            return 200, ret
+        else:
+            return 200, []
+
+
+
+
+
+
