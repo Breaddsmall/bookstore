@@ -9,9 +9,11 @@ from datetime import datetime, time
 
 # 连接数据库legend 记得修改这个！！！
 # engine = create_engine(Conf.get_sql_conf('local_w'))
+from sqlalchemy_utils import create_database, database_exists
+
 url = 'postgresql://{}:{}@{}:{}/{}'
 user='postgres'
-password='postgres'
+password='123456'
 host='localhost'
 port='5432'
 db='bookstore'
@@ -26,6 +28,8 @@ Base = declarative_base()
 def init():
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
+    if not database_exists(engine.url):
+        create_database(engine.url)
     session.execute(
         "CREATE TABLE IF NOT EXISTS usr ("
         "user_id TEXT PRIMARY KEY, password TEXT NOT NULL, "
@@ -33,7 +37,9 @@ def init():
     )
 
     session.execute(
-        "CREATE TABLE IF NOT EXISTS user_store(user_id TEXT, store_id TEXT, PRIMARY KEY(user_id, store_id));"
+        "CREATE TABLE IF NOT EXISTS user_store(user_id TEXT, store_id TEXT,"
+        "s_balance INTEGER,"
+        " PRIMARY KEY(user_id, store_id));"
     )
 
     session.execute(
@@ -44,12 +50,12 @@ def init():
 
     session.execute(
         "CREATE TABLE IF NOT EXISTS new_order( "
-        "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT)"
+        "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT,total_price INTEGER,condition TEXT)"
     )
 
     session.execute(
         "CREATE TABLE IF NOT EXISTS new_order_detail( "
-        "order_id TEXT, book_id TEXT, count INTEGER, price INTEGER,  "
+        "order_id TEXT, book_id TEXT, count INTEGER, price INTEGER, "
         "PRIMARY KEY(order_id, book_id))"
     )
 
