@@ -1,6 +1,6 @@
 import requests
 from urllib.parse import urljoin
-
+import sqlalchemy
 
 class Auth:
     def __init__(self, url_prefix):

@@ -4,6 +4,8 @@ import logging
 import sqlite3 as sqlite
 from be.model import error
 from be.model import db_conn
+import sqlalchemy
+import initialize_db
 
 # encode a json string like:
 #   {
@@ -19,7 +21,7 @@ def jwt_encode(user_id: str, terminal: str) -> str:
         key=user_id,
         algorithm="HS256",
     )
-    return encoded.decode("utf-8")
+    return encoded#.decode("utf-8")
 
 
 # decode a JWT to a json string like:
@@ -57,54 +59,65 @@ class User(db_conn.DBConn):
         try:
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
-            self.conn.execute(
-                "INSERT into user(user_id, password, balance, token, terminal) "
-                "VALUES (?, ?, ?, ?, ?);",
-                (user_id, password, 0, token, terminal), )
+            self.conn.execute(  "INSERT INTO usr (user_id, password, balance, token, terminal) values ('%s', '%s', 0, '%s', '%s')"%(user_id, password,token,terminal))
             self.conn.commit()
-        except sqlite.Error:
+            print("注册成功")
+        except sqlalchemy.exc.IntegrityError:
             return error.error_exist_user_id(user_id)
         return 200, "ok"
 
     def check_token(self, user_id: str, token: str) -> (int, str):
-        cursor = self.conn.execute("SELECT token from user where user_id=?", (user_id,))
+        cursor = self.conn.execute("SELECT token from usr where user_id='%s'"%(user_id))
+        print(1)
+        #cursor=self.conn.query(User).filter(User.user_id==user_id).get(token)
+        print(2)
         row = cursor.fetchone()
         if row is None:
+            print("userid有误")
             return error.error_authorization_fail()
         db_token = row[0]
         if not self.__check_token(user_id, db_token, token):
+            print("token有误")
             return error.error_authorization_fail()
+        print("token正确")
         return 200, "ok"
 
     def check_password(self, user_id: str, password: str) -> (int, str):
-        cursor = self.conn.execute("SELECT password from user where user_id=?", (user_id,))
+        cursor = self.conn.execute("SELECT password from usr where user_id='%s'"%(user_id))
+
         row = cursor.fetchone()
         if row is None:
+            print("user_id不存在")
             return error.error_authorization_fail()
-
         if password != row[0]:
+            print("密码不正确")
             return error.error_authorization_fail()
-
+        print("password正确")
         return 200, "ok"
 
     def login(self, user_id: str, password: str, terminal: str) -> (int, str, str):
         token = ""
         try:
+
             code, message = self.check_password(user_id, password)
+
             if code != 200:
                 return code, message, ""
-
             token = jwt_encode(user_id, terminal)
+            print(1)
+
             cursor = self.conn.execute(
-                "UPDATE user set token= ? , terminal = ? where user_id = ?",
-                (token, terminal, user_id), )
+                "UPDATE usr set token= '%s' , terminal = '%s' where user_id = '%s'"%(token,terminal,user_id))
+            print(2)
             if cursor.rowcount == 0:
                 return error.error_authorization_fail() + ("", )
             self.conn.commit()
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e)), ""
         except BaseException as e:
+            print(e)
             return 530, "{}".format(str(e)), ""
+        print("登录成功")
         return 200, "ok", token
 
     def logout(self, user_id: str, token: str) -> bool:
@@ -117,13 +130,12 @@ class User(db_conn.DBConn):
             dummy_token = jwt_encode(user_id, terminal)
 
             cursor = self.conn.execute(
-                "UPDATE user SET token = ?, terminal = ? WHERE user_id=?",
-                (dummy_token, terminal, user_id), )
+                "UPDATE usr SET token = '%s', terminal = '%s' WHERE user_id='%s'"%(token,terminal,user_id))
             if cursor.rowcount == 0:
                 return error.error_authorization_fail()
 
             self.conn.commit()
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -135,12 +147,12 @@ class User(db_conn.DBConn):
             if code != 200:
                 return code, message
 
-            cursor = self.conn.execute("DELETE from user where user_id=?", (user_id,))
+            cursor = self.conn.execute("DELETE from usr where user_id='%s'"%(user_id,))
             if cursor.rowcount == 1:
                 self.conn.commit()
             else:
                 return error.error_authorization_fail()
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -155,15 +167,17 @@ class User(db_conn.DBConn):
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
             cursor = self.conn.execute(
-                "UPDATE user set password = ?, token= ? , terminal = ? where user_id = ?",
-                (new_password, token, terminal, user_id), )
+                "UPDATE usr set password = '%s', token= '%s' , terminal = '%s' where user_id = '%s'"%(new_password,token,terminal,user_id))
             if cursor.rowcount == 0:
                 return error.error_authorization_fail()
 
             self.conn.commit()
-        except sqlite.Error as e:
+        except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
+    def search_book(self,book_id):
 
+
+        return 200, "ok"

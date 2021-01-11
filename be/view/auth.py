@@ -2,6 +2,7 @@ from flask import Blueprint
 from flask import request
 from flask import jsonify
 from be.model import user
+import sqlalchemy
 
 bp_auth = Blueprint("auth", __name__, url_prefix="/auth")
 
