@@ -55,12 +55,13 @@ class Buyer(db_conn.DBConn):
                     "VALUES('%s', '%s', %d, %d);"
                     % (uid, book_id, count, price))  # 添加状态0，该订单为支付
 
-                total_price += price
+
 
             self.conn.execute(
                 "INSERT INTO new_order(order_id, store_id, user_id,total_price,condition) "
                 "VALUES('%s', '%s', '%s',%d,'unpaid');"
                 % (uid, store_id, user_id, total_price))
+
             self.conn.commit()
             order_id = uid
         except sqlalchemy.exc.IntegrityError as e:
@@ -74,29 +75,29 @@ class Buyer(db_conn.DBConn):
         return 200, "ok", order_id
 
     def payment(self, user_id: str, password: str, order_id: str) -> (int, str):
-        conn = self.conn
+
         try:
-            cursor = conn.execute(
-                "SELECT order_id, user_id, store_id,total_price,condition FROM new_order WHERE order_id = '%s';" % (
+            cursor = self.conn.execute(
+                "SELECT user_id, store_id,total_price,condition FROM new_order WHERE order_id = '%s';" % (
                     order_id))
             row = cursor.fetchone()
             if row is None:
                 return error.error_invalid_order_id(order_id)
-            order_id = row[0]
-            buyer_id = row[1]
-            store_id = row[2]
-            total_price = row[3]
-            condition = row[4]
+            buyer_id = row[0]
+            store_id = row[1]
+            total_price = row[2]
+            condition = row[3]
+            time.sleep(0.01)    #防止并发导致的逻辑错误
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
-            time1=time.time()
+            #time1=time.time()
             if condition != "unpaid":
                 #print(condition,order_id)
                 #print("oh"+str(time.time()))
                 return error.error_unpayable_order(order_id)
 
-            cursor = conn.execute("SELECT balance, password FROM usr WHERE user_id = '%s';" % (buyer_id))
+            cursor = self.conn.execute("SELECT balance, password FROM usr WHERE user_id = '%s';" % (buyer_id))
             row = cursor.fetchone()
             if row is None:
                 return error.error_non_exist_user_id(buyer_id)
@@ -104,7 +105,7 @@ class Buyer(db_conn.DBConn):
             if password != row[1]:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id ='%s';" % (store_id))
+            cursor = self.conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id ='%s';" % (store_id))
             row = cursor.fetchone()
             if row is None:
                 return error.error_non_exist_store_id(store_id)
@@ -117,20 +118,23 @@ class Buyer(db_conn.DBConn):
             if balance < total_price:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE usr set balance = balance - %d "
+            print(balance)
+            print(total_price)
+
+            cursor = self.conn.execute("UPDATE usr set balance = balance - %d "
                                   "WHERE user_id = '%s' AND balance >= %d;"
                                   % (total_price, buyer_id, total_price))
 
             if cursor.rowcount == 0:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE user_store set s_balance = s_balance + %d "
+            cursor = self.conn.execute("UPDATE user_store set s_balance = s_balance + %d "
                                   "WHERE store_id = '%s';"
                                   % (total_price, store_id))
 
             if cursor.rowcount == 0:
                 return error.error_non_exist_store_id(store_id)
-            cursor = conn.execute("UPDATE new_order set condition = 'paid' WHERE order_id ='%s';" % (order_id))
+            cursor = self.conn.execute("UPDATE new_order set condition = 'paid' WHERE order_id ='%s';" % (order_id))
             #print (order_id)
             #time2=time.time()
             #print(time2-time1)
@@ -138,7 +142,7 @@ class Buyer(db_conn.DBConn):
             if cursor.rowcount == 0:
                 return error.error_invalid_order_id(order_id)
 
-            conn.commit()
+            self.conn.commit()
 
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))
@@ -223,6 +227,8 @@ class Buyer(db_conn.DBConn):
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
+
+    #def cancel
 
     # 查找自己的所有订单
     # def search_orde.r(self,user_id:str):
