@@ -63,7 +63,7 @@ class Buyer(db_conn.DBConn):
                 % (uid, store_id, user_id, total_price))
 
             self.conn.commit()
-            #print("下单成功")
+            # print("下单成功")
             order_id = uid
             execute_job(order_id, 0)
 
@@ -90,8 +90,8 @@ class Buyer(db_conn.DBConn):
             store_id = row[1]
             total_price = row[2]
             condition = row[3]
-            #time.sleep(0.5)  # 防止并发导致的查询顺序错误
-            print(condition,order_id)
+            # time.sleep(0.5)  # 防止并发导致的查询顺序错误
+            print(condition, order_id)
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
@@ -185,6 +185,7 @@ class Buyer(db_conn.DBConn):
 
             if row[0] != password:
                 return error.error_authorization_fail()
+            #print("checkpoint1")
 
             cursor = self.conn.execute(
                 "SELECT  store_id,total_price,condition FROM new_order "
@@ -194,33 +195,36 @@ class Buyer(db_conn.DBConn):
                 return error.error_invalid_order_id(order_id)
             if row[2] != 'shipped':
                 return error.error_unreceivable_order(order_id)
+            #print("checkpoint2")
 
             store_id = row[0]
             total_price = row[1]
 
             self.conn.execute("UPDATE new_order SET condition = 'received' "
                               "WHERE order_id ='%s';" % (order_id))
+            #print("checkpoint3")
 
             cursor = self.conn.execute(
                 "SELECT user_id FROM user_store "
                 "WHERE store_id = '%s';" % (store_id)
             )
+            #print("checkpoint4")
             row = cursor.fetchone()
             if row is None:
                 return error.error_non_exist_store_id(store_id)
             seller_id = row[0]
 
-            cursor = self.conn.execute("UPDATE user_store SET s_balance = s_balance - %d "
-                                       "WHERE store_id = '%s' AND s_balance >= %d;"
-                                       % (total_price, store_id, total_price))
-            row = cursor.fetchone()
-            if row is None:
+            count = self.conn.execute("UPDATE user_store SET s_balance = s_balance - %d "
+                                      "WHERE store_id = '%s' AND s_balance >= %d;"
+                                      % (total_price, store_id, total_price))
+            if count == 0:
                 return error.error_not_sufficient_funds(order_id)  # 卖家余额出错
+            #print("checkpoint5")
 
-            cursor = self.conn.execute("UPDATE usr SET balance = balance+ %d "
-                                       "WHERE user_id = %d;" % (seller_id))
-            row = cursor.fetchone()
-            if row is None:
+            count = self.conn.execute("UPDATE usr SET balance = balance+ %d "
+                                      "WHERE user_id = '%s';" % (total_price, seller_id))
+            #print("checkpoint6")
+            if count == 0:
                 return error.error_non_exist_user_id(seller_id)
             self.conn.commit()
         except sqlalchemy.exc.IntegrityError as e:
