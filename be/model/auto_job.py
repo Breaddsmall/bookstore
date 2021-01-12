@@ -36,7 +36,6 @@ class Auto_job(db_conn.DBConn):
         self.conn.execute("UPDATE new_order SET condition = 'cancelled' "
                           "WHERE order_id = '%s' AND condition = 'unpaid';" % (order_id))
         self.conn.commit()
-        print("修改完毕"+order_id)
         exit(0)
 
     def auto_receive(self, order_id: str) -> (int, str):
