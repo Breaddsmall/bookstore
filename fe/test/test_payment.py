@@ -3,6 +3,7 @@ from time import sleep
 import pytest
 
 from fe.access.buyer import Buyer
+from fe.access.seller import Seller
 from fe.test.gen_book_data import GenBook
 from fe.access.new_buyer import register_new_buyer
 from fe.access.book import Book
@@ -18,6 +19,7 @@ class TestPayment:
     total_price: int
     order_id: str
     buyer: Buyer
+    seller: Seller
 
     @pytest.fixture(autouse=True)
     def pre_run_initialization(self):
@@ -31,6 +33,7 @@ class TestPayment:
         assert ok
         b = register_new_buyer(self.buyer_id, self.password)
         self.buyer = b
+        self.seller = gen_book.seller
         code, self.order_id = b.new_order(self.store_id, buy_book_id_list)
         assert code == 200
         self.total_price = 0
@@ -46,8 +49,17 @@ class TestPayment:
     def test_ok(self):
         code = self.buyer.add_funds(self.total_price)
         assert code == 200
+        code, result = self.buyer.check_balance()
+        assert code == 200
+        assert result == self.total_price
         code = self.buyer.payment(self.order_id)
         assert code == 200
+        code,result = self.buyer.check_balance()
+        assert code == 200
+        assert result ==0
+        code, result = self.seller.check_s_balance(self.seller_id,self.store_id)
+        assert code == 200
+        assert result == self.total_price
 
 
     def test_authorization_error(self):

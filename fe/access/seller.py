@@ -61,16 +61,17 @@ class Seller:
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
 
-    def check_s_balance(self, user_id: str, password: str, store_id: str):
+    def check_s_balance(self,seller_id, store_id: str):
         json = {
-            "user_id": user_id,
-            "password": password,
+            "user_id": seller_id,
+            "password": self.password,
             "store_id": store_id,
         }
         url = urljoin(self.url_prefix, "check_s_balance")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
-        return r.status_code
+        json = r.json()
+        return r.status_code,json["result"]
 
     def check_stock(self, seller_id: str, password: str, store_id: str, book_id: str) -> int:
         json = {
@@ -83,4 +84,22 @@ class Seller:
         url = urljoin(self.url_prefix, "check_stock")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
+
         return r.status_code
+
+    def search_all_order_seller(self, condition: str):
+        json = {"user_id": self.user_id, "password": self.password, "store_id": self.store_id, "condition": condition,}
+        url = urljoin(self.url_prefix, "search_all_order_seller")
+        r = requests.post(url, json=json)
+        result = r.json().get("result")
+        count = result.json().get("count")
+        return r.status_code, count
+
+    def search_order_detail_seller(self, order_id: str):
+        json = {"user_id": self.user_id, "password": self.password, "order_id": order_id,}
+        url = urljoin(self.url_prefix, "search_order_detail_seller")
+        r = requests.post(url, json=json)
+        result = r.json().get("result")
+        count = result.json().get("result_count")
+        condition = result.json().get("condition")
+        return r.status_code, count, condition

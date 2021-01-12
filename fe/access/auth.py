@@ -109,21 +109,5 @@ class Auth:
         r = requests.post(url, json=json)
         return r.status_code
 
-    def search_all_order(self, user_id: str, password: str, store_id: str, condition: str, is_buyer: str):
-        json = {"user_id": user_id, "password": password, "store_id": store_id, "condition": condition,
-                "is_buyer": is_buyer}
-        url = urljoin(self.url_prefix, "search_all_order")
-        r = requests.post(url, json=json)
-        return r.status_code
 
-    def search_order_detail(self, user_id: str, password: str, order_id: str, is_buyer: str):
-        json = {"user_id": user_id, "password": password, "order_id": order_id, "is_buyer": is_buyer}
-        url = urljoin(self.url_prefix, "search_order_detail")
-        r = requests.post(url, json=json)
-        return r.status_code
 
-    def check_balance(self, user_id: str, password: str):
-        json = {"user_id": user_id, "password": password}
-        url = urljoin(self.url_prefix, "check_balance")
-        r = requests.post(url, json=json)
-        return r.status_code

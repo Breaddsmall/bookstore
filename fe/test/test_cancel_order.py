@@ -21,9 +21,9 @@ class TestReceive:
 
     @pytest.fixture(autouse=True)
     def pre_run_initialization(self):
-        self.seller_id = "test_receive_seller_id_{}".format(str(uuid.uuid1()))
-        self.store_id = "test_receive_store_id_{}".format(str(uuid.uuid1()))
-        self.buyer_id = "test_receive_buyer_id_{}".format(str(uuid.uuid1()))
+        self.seller_id = "test_cancel_odrder_seller_id_{}".format(str(uuid.uuid1()))
+        self.store_id = "test_cancel_order_store_id_{}".format(str(uuid.uuid1()))
+        self.buyer_id = "test_cancel_order_buyer_id_{}".format(str(uuid.uuid1()))
         self.password = self.seller_id
         gen_book = GenBook(self.seller_id, self.store_id)
         self.seller=gen_book.seller
@@ -44,23 +44,33 @@ class TestReceive:
                 self.total_price = self.total_price + book.price * num
         yield
 
-    def test_ok(self):
+    def test_unpaid_ok(self):
+        code = self.buyer.cancel_order(self.order_id)
+        assert code == 200
+
+    def test_paid_ok(self):
         code = self.buyer.add_funds(self.total_price)
         assert code == 200
         code = self.buyer.payment(self.order_id)
         assert code == 200
-        code = self.seller.ship(self.seller_id,self.order_id)
-        assert code == 200
-        code = self.buyer.receive(self.order_id)
-        assert code == 200
-        self.buyer.user_id = self.seller_id
-        code, result = self.seller.check_s_balance(self.seller_id, self.store_id)
+        code, result = self.buyer.check_balance()
         assert code == 200
         assert result == 0
-
+        code = self.buyer.cancel_order(self.order_id)
+        assert code == 200
         code, result = self.buyer.check_balance()
         assert code == 200
         assert result == self.total_price
+
+    def test_shipped_ok(self):
+        code = self.buyer.add_funds(self.total_price)
+        assert code == 200
+        code = self.buyer.payment(self.order_id)
+        assert code == 200
+        code = self.seller.ship(self.seller_id, self.order_id)
+        assert code == 200
+        code = self.buyer.cancel_order(self.order_id)
+        assert code == 200
 
 
     def test_authorization_error(self):
@@ -75,9 +85,7 @@ class TestReceive:
         code = self.buyer.receive(self.order_id)
         assert code != 200
 
-    # 重复收货（即已收货订单）和状态为已取消、未付款、未发货的订单
-    # 对于收货来说是一样的，故一次测试即可。
-    def test_repeat_receive(self):
+    def test_received_error(self):
         code = self.buyer.add_funds(self.total_price)
         assert code == 200
         code = self.buyer.payment(self.order_id)
@@ -87,27 +95,13 @@ class TestReceive:
         code = self.buyer.receive(self.order_id)
         assert code == 200
 
-        code = self.buyer.receive(self.order_id)
+        code = self.buyer.cancel_order(self.order_id)
         assert code != 200
 
 
-    def test_auto_receive(self):
-        code = self.buyer.add_funds(self.total_price)
+    def test_repeat_cancel(self):
+        code = self.buyer.cancel_order(self.order_id)
         assert code == 200
-        code = self.buyer.payment(self.order_id)
-        assert code == 200
-        code = self.seller.ship(self.seller_id, self.order_id)
-        assert code == 200
-        sleep(5)
-        code = self.buyer.receive(self.order_id)
+        code = self.buyer.cancel_order(self.order_id)
         assert code != 200
-
-        code, result = self.seller.check_s_balance(self.seller_id,self.store_id)
-        assert code == 200
-        assert result == 0
-
-        self.buyer.user_id=self.seller_id
-        code, result = self.buyer.check_balance()
-        assert code == 200
-        assert result == self.total_price
 

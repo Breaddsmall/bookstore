@@ -139,33 +139,7 @@ def search_book_intro_index_version_in_store():
     return jsonify({"message": message}), code
 
 
-@bp_auth.route("/search_all_order", methods=["POST"])
-def search_all_order():
-    user_id = request.json.get("user_id", "")
-    password = request.json.get("password", "")
-    store_id = request.json.get("store_id", "")
-    condition = request.json.get("condition", "")
-    is_buyer = bool(int(request.json.get("is_buyer", "")))
-    u = user.User()
-    code, message, result = u.search_all_order(user_id, password, store_id, condition, is_buyer)
-    return jsonify({"message": message, "result": result}), code
 
 
-@bp_auth.route("/search_order_detail", methods=["POST"])
-def search_order_detail():
-    user_id = request.json.get("user_id", "")
-    password = request.json.get("password", "")
-    order_id = request.json.get("order_id", "")
-    is_buyer = bool(int(request.json.get("is_buyer", "")))
-    u = user.User()
-    code, message, result = u.search_order_detail(user_id, password, order_id, is_buyer)
-    return jsonify({"message": message, "result": result}), code
 
 
-@bp_auth.route("/check_balance", methods=["POST"])
-def check_balance():
-    user_id = request.json.get("user_id", "")
-    password = request.json.get("password", "")
-    u = user.User()
-    code, message, result = u.check_balance(user_id, password)
-    return jsonify({"message": message, "result": result}), code

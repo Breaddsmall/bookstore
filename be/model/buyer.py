@@ -91,7 +91,7 @@ class Buyer(db_conn.DBConn):
             total_price = row[2]
             condition = row[3]
             # time.sleep(0.5)  # 防止并发导致的查询顺序错误
-            print(condition, order_id)
+            #print(condition, order_id)
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
@@ -260,16 +260,14 @@ class Buyer(db_conn.DBConn):
             elif condition == 'paid' or condition == 'shipped':
                 self.conn.execute("UPDATE new_order SET condition = 'cancelled' "
                                   "WHERE order_id = '%s';" % (order_id))
-                self.cancel_order()
-                cursor = self.conn.execute("UPDATE user_store SET s_balance = s_balance - %d "
+                count = self.conn.execute("UPDATE user_store SET s_balance = s_balance - %d "
                                            "WHERE store_id = '%s' AND s_balance >= %d;"
                                            % (total_price, store_id, total_price))
-                cursor = self.conn.execute("UPDATE usr SET balance = balance + %d "
-                                           "WHERE user_id = '%s';"
-                                           % (total_price, user_id))
-                row = cursor.fetchone()
-                if row is None:
+                if count == 0:
                     return error.error_not_sufficient_funds(order_id)  # 卖家余额出错
+                self.conn.execute("UPDATE usr SET balance = balance + %d "
+                                  "WHERE user_id = '%s';"
+                                  % (total_price, user_id))
             else:
                 return error.error_invalid_order_id(order_id)  # 状态出错
             self.conn.commit()
@@ -278,3 +276,105 @@ class Buyer(db_conn.DBConn):
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
+
+    def check_balance(self, user_id: str, password: str) -> (int, str, int):
+        try:
+            cursor = self.conn.execute("SELECT password,balance from usr where user_id='%s';" % (user_id,))
+            row = cursor.fetchone()
+            if row is None:
+                return error.error_non_exist_user_id()+(-1)
+
+            if row[0] != password:
+                return error.error_authorization_fail()+(-1)
+            balance = row[1]
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e)), -1
+        except BaseException as e:
+            return 530, "{}".format(str(e)), -1
+        return 200, "ok", balance
+
+    def search_all_order_buyer(self, user_id: str, password: str, store_id: str, condition: str):
+        try:
+            cursor = self.conn.execute("SELECT password FROM usr WHERE user_id='%s';" % (user_id,))
+            row = cursor.fetchone()
+            if row is None:
+                return error.error_authorization_fail()+("")
+
+            if row[0] != password:
+                return error.error_authorization_fail()+("")
+
+            store_parameter=""
+            condition_parameter=""
+            if store_id != "":
+                store_parameter = "AND store_id = '%s' " % (store_id)
+
+            if condition_parameter != "":
+                condition_parameter = " AND condition = '%s' " % (condition)
+
+            cursor = self.conn.execute("SELECT order_id, total_price, store_id, condition FROM new_order "
+                                       "WHERE user_id='%s' %s %s;" % (user_id, store_parameter,condition_parameter))
+            order_id_list = []
+            total_price_list = []
+            store_id_list = []
+            condition_list = []
+            count=0
+            for row in cursor:
+                order_id_list.append(row[0])
+                total_price_list.append(row[1])
+                store_id_list.append(row[2])
+                condition_list.append(row[3])
+                count+=1
+
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e))+("")
+        except BaseException as e:
+            # print(e)
+            return 530, "{}".format(str(e))+("")
+
+        return 200, "ok", jsonify(
+            {"order_id": order_id_list, "total_price": total_price_list, "store_id": store_id_list,
+             "condition_id": condition_list,"count":count})
+
+    def search_order_detail_buyer(self, user_id: str, password: str, order_id: str):
+        try:
+            cursor = self.conn.execute("SELECT password from usr where user_id='%s';" % (user_id,))
+            row = cursor.fetchone()
+            if row is None:
+                return error.error_authorization_fail()+("")
+
+            if row[0] != password:
+                return error.error_authorization_fail()+("")
+
+            cursor = self.conn.execute(
+                    "SELECT  store_id,total_price,condition FROM new_order "
+                    "WHERE order_id = '%s'AND user_id = '%s';" % (order_id, user_id))
+            row = cursor.fetchone()
+            if row is None:
+                return error.error_invalid_order_id(order_id)+("")
+
+            store_id = row[0]
+            total_price = row[1]
+            condition = row[2]
+
+            book_id_list = []
+            count_list = []
+            price_list = []
+            result_count=0
+
+            cursor = self.conn.execute(
+                "SELECT book_id, count, price FROM new_order_detail WHERE order_id = '%s';" % (order_id)
+            )
+            for row in cursor:
+                book_id_list.append(row[0])
+                count_list.append(row[1])
+                price_list.append(row[2])
+                result_count+=1
+
+            msg = jsonify(
+                {"order_id": order_id, "store_id": store_id, "total_price": total_price, "condition": condition,
+                 "book_id": book_id_list, "count": count_list, "price": price_list,"result_count":result_count})
+        except sqlalchemy.exc.IntegrityError as e:
+            return 528, "{}".format(str(e)),+("")
+        except BaseException as e:
+            return 530, "{}".format(str(e))+("")
+        return 200, "ok", msg

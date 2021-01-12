@@ -7,7 +7,7 @@ from fe.access.new_seller import register_new_seller
 from fe.access.new_buyer import register_new_buyer
 from fe.access.buyer import Buyer
 from fe import conf
-
+logging.basicConfig(level=logging.INFO,filename="log.txt")
 
 class NewOrder:
     def __init__(self, buyer: Buyer, store_id, book_id_and_count):
@@ -153,7 +153,7 @@ class Workload:
             # Thread_num:以新提交付款订单的数量作为并发数(这一次的TOTAL-上一次的TOTAL)
             # TOTAL:总付款提交订单数量
             # LATENCY:提交付款订单时间/处理付款订单笔数(只考虑该线程延迟，未考虑并发)
-            logging.info(
+            logging.warning(
                 "TPS_C={}, NO=OK:{} Thread_num:{} TOTAL:{} LATENCY:{} , P=OK:{} Thread_num:{} TOTAL:{} LATENCY:{}".format(
                     int(self.n_new_order_ok / (
                                 self.time_payment / n_payment_diff + self.time_new_order / n_new_order_diff)),

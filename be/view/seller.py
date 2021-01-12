@@ -60,7 +60,7 @@ def check_s_balance():
     store_id: str = request.json.get("store_id")
 
     s = seller.Seller()
-    code, message, result = s.check_s_balance(user_id, password, store_id)
+    code,message,result = s.check_s_balance(user_id, password, store_id)
 
     return jsonify({"message": message, "result": result}), code
 
@@ -73,6 +73,27 @@ def check_stock():
     book_id: str = request.json.get("book_id")
 
     s = seller.Seller()
-    code, message, result = s.check_stock(user_id, password, store_id, book_id)
+    code, message,result = s.check_stock(user_id, password, store_id, book_id)
 
     return jsonify({"message": message, "result": result}), code
+
+@bp_seller.route("/search_all_order_seller", methods=["POST"])
+def search_all_order_seller():
+    user_id = request.json.get("user_id", "")
+    password = request.json.get("password", "")
+    store_id = request.json.get("store_id", "")
+    condition = request.json.get("condition", "")
+    s = seller.Seller()
+    code, message, result = s.search_all_order_seller(user_id, password, store_id, condition)
+    return jsonify({"message": message, "result": result}), code
+
+
+@bp_seller.route("/search_order_detail_seller", methods=["POST"])
+def search_order_detail_seller():
+    user_id = request.json.get("user_id", "")
+    password = request.json.get("password", "")
+    order_id = request.json.get("order_id", "")
+    s=seller.Seller()
+    code, message, result = s.search_order_detail_seller(user_id, password, order_id)
+    return jsonify({"message": message, "result": result}), code
+

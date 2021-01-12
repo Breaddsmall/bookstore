@@ -48,9 +48,32 @@ class Buyer:
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
 
-    def cancel_order(self, user_id: str, password: str, order_id: str) -> int:
-        json = {"user_id": user_id, "password": password, "order_id": order_id}
+    def cancel_order(self, order_id: str) -> int:
+        json = {"user_id": self.user_id, "password": self.password, "order_id": order_id}
         url = urljoin(self.url_prefix, "cancel_order")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
+
+    def check_balance(self,):
+        json = {"user_id": self.user_id, "password": self.password}
+        url = urljoin(self.url_prefix, "check_balance")
+        r = requests.post(url, json=json)
+        return r.status_code,r.json().get("result")
+
+    def search_all_order_buyer(self, store_id,condition: str):
+        json = {"user_id": self.user_id, "password": self.password, "store_id": store_id, "condition": condition,}
+        url = urljoin(self.url_prefix, "search_all_order_buyer")
+        r = requests.post(url, json=json)
+        result = r.json().get("result")
+        count = result.json().get("count")
+        return r.status_code, count
+
+    def search_order_detail_buyer(self, order_id: str,):
+        json = {"user_id": self.user_id, "password": self.password, "order_id": order_id}
+        url = urljoin(self.url_prefix, "search_order_detail_buyer")
+        r = requests.post(url, json=json)
+        result=r.json().get("result")
+        count=result.json().get("result_count")
+        condition = result.json().get("condition")
+        return r.status_code,count,condition
