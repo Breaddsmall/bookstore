@@ -3,14 +3,16 @@ import os
 from flask import Flask
 from flask import Blueprint
 from flask import request
+
+from be.auto_config import Config
 from be.view import auth
 from be.view import seller
 from be.view import buyer
 # from be.model.store import init_database
 from initialize_db import init
+from flask_apscheduler import APScheduler
 
 bp_shutdown = Blueprint("shutdown", __name__)
-
 
 def shutdown_server():
     func = request.environ.get("werkzeug.server.shutdown")
@@ -44,4 +46,10 @@ def be_run():
     app.register_blueprint(auth.bp_auth)
     app.register_blueprint(seller.bp_seller)
     app.register_blueprint(buyer.bp_buyer)
+
+    app.config.from_object(Config())
+    scheduler = APScheduler()
+    scheduler.init_app(app)
+    scheduler.start()
+
     app.run()

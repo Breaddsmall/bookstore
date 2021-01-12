@@ -8,7 +8,7 @@ import logging
 from be.model import db_conn
 from be.model import error
 from flask import jsonify
-from be.model.auto_job import execute_job
+#from be.model.auto_job import execute_job
 
 
 class Buyer(db_conn.DBConn):
@@ -65,7 +65,7 @@ class Buyer(db_conn.DBConn):
             self.conn.commit()
             # print("下单成功")
             order_id = uid
-            execute_job(order_id, 0)
+            #execute_job(order_id, 0)
 
         except sqlalchemy.exc.IntegrityError as e:
             logging.info("528, {}".format(str(e)))
@@ -133,7 +133,7 @@ class Buyer(db_conn.DBConn):
 
             if cursor.rowcount == 0:
                 return error.error_non_exist_store_id(store_id)
-            cursor = self.conn.execute("UPDATE new_order set condition = 'paid' WHERE order_id ='%s';" % (order_id))
+            cursor = self.conn.execute("UPDATE new_order set condition = 'paid',update_time=CURRENT_TIMESTAMP WHERE order_id ='%s';" % (order_id))
             # print (order_id)
             # time2=time.time()
             # print(time2-time1)
@@ -200,7 +200,7 @@ class Buyer(db_conn.DBConn):
             store_id = row[0]
             total_price = row[1]
 
-            self.conn.execute("UPDATE new_order SET condition = 'received' "
+            self.conn.execute("UPDATE new_order SET condition = 'received',update_time=CURRENT_TIMESTAMP "
                               "WHERE order_id ='%s';" % (order_id))
             #print("checkpoint3")
 
@@ -255,10 +255,10 @@ class Buyer(db_conn.DBConn):
             if condition == 'received' or condition == 'cancelled':
                 return error.error_uncancellable_order(order_id)
             if condition == 'unpaid':
-                self.conn.execute("UPDATE new_order SET condition = 'cancelled' "
+                self.conn.execute("UPDATE new_order SET condition = 'cancelled',update_time=CURRENT_TIMESTAMP "
                                   "WHERE order_id = '%s';" % (order_id))
             elif condition == 'paid' or condition == 'shipped':
-                self.conn.execute("UPDATE new_order SET condition = 'cancelled' "
+                self.conn.execute("UPDATE new_order SET condition = 'cancelled',update_time=CURRENT_TIMESTAMP "
                                   "WHERE order_id = '%s';" % (order_id))
                 count = self.conn.execute("UPDATE user_store SET s_balance = s_balance - %d "
                                            "WHERE store_id = '%s' AND s_balance >= %d;"

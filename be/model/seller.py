@@ -1,11 +1,10 @@
 import sqlite3 as sqlite
 from be.model import error
 from be.model import db_conn
-import sqlalchemy
 from flask import jsonify, json
 import sqlalchemy
 
-from be.model.auto_job import execute_job
+#from be.model.auto_job import execute_job
 
 
 class Seller(db_conn.DBConn):
@@ -88,9 +87,9 @@ class Seller(db_conn.DBConn):
                 return error.error_non_exist_store_id(store_id)
             if condition != "paid":
                 return error.error_unshippable_order(order_id)
-            self.conn.execute("UPDATE new_order set condition ='shipped' WHERE order_id = '%s';"%(order_id,))
+            self.conn.execute("UPDATE new_order set condition ='shipped',update_time=CURRENT_TIMESTAMP WHERE order_id = '%s';"%(order_id,))
             self.conn.commit()
-            execute_job(order_id, 1)
+            #execute_job(order_id, 1)
             print("物品已发货")
         except sqlalchemy.exc.IntegrityError as e:
             return 528, "{}".format(str(e))

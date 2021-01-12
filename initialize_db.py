@@ -29,6 +29,8 @@ def init():
     session = DBSession()
     if not database_exists(engine.url):
         create_database(engine.url)
+
+
     session.execute(
         "CREATE TABLE IF NOT EXISTS usr ("
         "user_id TEXT PRIMARY KEY, password TEXT NOT NULL, "
@@ -49,7 +51,8 @@ def init():
 
     session.execute(
         "CREATE TABLE IF NOT EXISTS new_order( "
-        "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT,total_price INTEGER,condition TEXT)"
+        "order_id TEXT PRIMARY KEY, user_id TEXT, store_id TEXT,total_price INTEGER,condition TEXT,"
+        "update_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP);"
     )
 
     session.execute(
@@ -57,6 +60,17 @@ def init():
         "order_id TEXT, book_id TEXT, count INTEGER, price INTEGER, "
         "PRIMARY KEY(order_id, book_id))"
     )
+
+
+    # 定义数据库函数（触发器）
+
+    # 以user_id和store_id建立new_order上的索引
+    # 原因：除了primary key order_id，还会查询user_id/store_id/condition
+    # 其中condition只有五种状态，而user_id和store_id都非常多
+    session.execute(
+        "CREATE INDEX IF NOT EXISTS search_order_index ON new_order(user_id,store_id)"
+    )
+
 
     # 提交即保存到数据库
     session.commit()
