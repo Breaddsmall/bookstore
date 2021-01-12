@@ -61,12 +61,12 @@ class Buyer:
         r = requests.post(url, json=json)
         return r.status_code,r.json().get("result")
 
-    def search_all_order_buyer(self, store_id,condition: str):
+    def search_all_order_buyer(self, store_id="",condition=""):
         json = {"user_id": self.user_id, "password": self.password, "store_id": store_id, "condition": condition,}
         url = urljoin(self.url_prefix, "search_all_order_buyer")
         r = requests.post(url, json=json)
         result = r.json().get("result")
-        count = result.json().get("count")
+        count = result["count"]
         return r.status_code, count
 
     def search_order_detail_buyer(self, order_id: str,):
@@ -74,6 +74,6 @@ class Buyer:
         url = urljoin(self.url_prefix, "search_order_detail_buyer")
         r = requests.post(url, json=json)
         result=r.json().get("result")
-        count=result.json().get("result_count")
-        condition = result.json().get("condition")
+        count=result["result_count"]
+        condition = result["condition"]
         return r.status_code,count,condition

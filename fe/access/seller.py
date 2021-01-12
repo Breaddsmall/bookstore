@@ -87,19 +87,19 @@ class Seller:
 
         return r.status_code
 
-    def search_all_order_seller(self, condition: str):
-        json = {"user_id": self.user_id, "password": self.password, "store_id": self.store_id, "condition": condition,}
+    def search_all_order_seller(self,store_id, condition=""):
+        json = {"user_id": self.seller_id, "password": self.password, "store_id": store_id, "condition": condition,}
         url = urljoin(self.url_prefix, "search_all_order_seller")
         r = requests.post(url, json=json)
         result = r.json().get("result")
-        count = result.json().get("count")
+        count = result["count"]
         return r.status_code, count
 
     def search_order_detail_seller(self, order_id: str):
-        json = {"user_id": self.user_id, "password": self.password, "order_id": order_id,}
+        json = {"user_id": self.seller_id, "password": self.password, "order_id": order_id,}
         url = urljoin(self.url_prefix, "search_order_detail_seller")
         r = requests.post(url, json=json)
         result = r.json().get("result")
-        count = result.json().get("result_count")
-        condition = result.json().get("condition")
+        count = result["result_count"]
+        condition = result["condition"]
         return r.status_code, count, condition

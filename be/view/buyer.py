@@ -77,7 +77,7 @@ def search_all_order_buyer():
     condition = request.json.get("condition", "")
     b = Buyer()
     code, message, result = b.search_all_order_buyer(user_id, password, store_id, condition)
-    return jsonify({"message": message, "result": result}), code
+    return jsonify({"message": message, "result":result}), code
 
 
 @bp_buyer.route("/search_order_detail_buyer", methods=["POST"])

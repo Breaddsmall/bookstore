@@ -298,17 +298,17 @@ class Buyer(db_conn.DBConn):
             cursor = self.conn.execute("SELECT password FROM usr WHERE user_id='%s';" % (user_id,))
             row = cursor.fetchone()
             if row is None:
-                return error.error_authorization_fail()+("")
+                return error.error_authorization_fail()+({"order_id": [], "total_price": [], "store_id": [],"condition_id": [],"count":-1},)
 
             if row[0] != password:
-                return error.error_authorization_fail()+("")
+                return error.error_authorization_fail()+({"count":-1 },)
 
             store_parameter=""
             condition_parameter=""
             if store_id != "":
                 store_parameter = "AND store_id = '%s' " % (store_id)
 
-            if condition_parameter != "":
+            if condition != "":
                 condition_parameter = " AND condition = '%s' " % (condition)
 
             cursor = self.conn.execute("SELECT order_id, total_price, store_id, condition FROM new_order "
@@ -324,33 +324,33 @@ class Buyer(db_conn.DBConn):
                 store_id_list.append(row[2])
                 condition_list.append(row[3])
                 count+=1
-
         except sqlalchemy.exc.IntegrityError as e:
-            return 528, "{}".format(str(e))+("")
+            return 528, "{}".format(str(e)),{"order_id": [], "total_price": [], "store_id": [],
+             "condition_id": [],"count":-1}
         except BaseException as e:
             # print(e)
-            return 530, "{}".format(str(e))+("")
+            return 530, "{}".format(str(e)),{"order_id": [], "total_price": [], "store_id": [],
+             "condition_id": [],"count":-1}
 
-        return 200, "ok", jsonify(
-            {"order_id": order_id_list, "total_price": total_price_list, "store_id": store_id_list,
-             "condition_id": condition_list,"count":count})
+        return 200, "ok", {"order_id": order_id_list, "total_price": total_price_list, "store_id": store_id_list,
+             "condition_id": condition_list,"count":count}
 
     def search_order_detail_buyer(self, user_id: str, password: str, order_id: str):
         try:
             cursor = self.conn.execute("SELECT password from usr where user_id='%s';" % (user_id,))
             row = cursor.fetchone()
             if row is None:
-                return error.error_authorization_fail()+("")
+                return error.error_authorization_fail()+({"condition":-1,"result_count":-1},)
 
             if row[0] != password:
-                return error.error_authorization_fail()+("")
+                return error.error_authorization_fail()+({"condition":-1,"result_count":-1},)
 
             cursor = self.conn.execute(
                     "SELECT  store_id,total_price,condition FROM new_order "
                     "WHERE order_id = '%s'AND user_id = '%s';" % (order_id, user_id))
             row = cursor.fetchone()
             if row is None:
-                return error.error_invalid_order_id(order_id)+("")
+                return error.error_invalid_order_id(order_id)+({"condition":-1,"result_count":-1},)
 
             store_id = row[0]
             total_price = row[1]
@@ -370,11 +370,9 @@ class Buyer(db_conn.DBConn):
                 price_list.append(row[2])
                 result_count+=1
 
-            msg = jsonify(
-                {"order_id": order_id, "store_id": store_id, "total_price": total_price, "condition": condition,
-                 "book_id": book_id_list, "count": count_list, "price": price_list,"result_count":result_count})
+            msg= {"order_id": order_id, "store_id": store_id, "total_price": total_price, "condition": condition,"book_id": book_id_list, "count": count_list, "price": price_list,"result_count":result_count}
         except sqlalchemy.exc.IntegrityError as e:
-            return 528, "{}".format(str(e)),+("")
+            return 528, "{}".format(str(e)), {"condition":-1,"result_count":-1}
         except BaseException as e:
-            return 530, "{}".format(str(e))+("")
+            return 530, "{}".format(str(e)), {"condition":-1,"result_count":-1}
         return 200, "ok", msg
