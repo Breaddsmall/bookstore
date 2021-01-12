@@ -13,13 +13,13 @@ import psycopg2
 from datetime import datetime, time
 
 url = 'postgresql://{}:{}@{}:{}/{}'
-user='postgres'
-password='postgres'
-host='localhost'
-port='5432'
-db='bookstore'
+user = 'postgres'
+password = 'postgres'
+host = 'localhost'
+port = '5432'
+db = 'bookstore'
 url = url.format(user, password, host, port, db)
-engine = create_engine(url,client_encoding='utf8')
+engine = create_engine(url, client_encoding='utf8')
 # engine = create_engine(Conf.get_sql_conf('local'))
 
 Base = declarative_base()
@@ -36,6 +36,8 @@ conn.execute(
                 "content TEXT, tags TEXT, picture BLOB)"
             )
 """
+
+
 class Book1(Base):
     __tablename__ = 'book'
     id = Column(Integer, primary_key=True)
@@ -55,6 +57,7 @@ class Book1(Base):
     content = Column(Text)
     tags = Column(Text)
     picture = Column(LargeBinary)
+
 
 class Book:
     id: str
@@ -78,6 +81,7 @@ class Book:
         self.tags = []
         self.pictures = []
 
+
 def init():
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
@@ -88,7 +92,6 @@ def init():
 
 
 class BookDB:
-
 
     def __init__(self, large: bool = False):
         parent_path = os.path.dirname(os.path.dirname(__file__))
@@ -116,7 +119,7 @@ class BookDB:
             "price, currency_unit, binding, "
             "isbn, author_intro, book_intro, "
             "content, tags, picture FROM book ORDER BY id "
-            "LIMIT '%s' OFFSET '%s'"%(size, start))
+            "LIMIT '%s' OFFSET '%s'" % (size, start))
         for row in cursor:
             book = Book()
             book.id = row[0]
@@ -153,7 +156,8 @@ class BookDB:
             # print(book)
             # print(tags)
         return books
-    def send_info_to_db(self,start,size):
+
+    def send_info_to_db(self, start, size):
         DBSession = sessionmaker(bind=engine)
         session = DBSession()
         conn = sqlite.connect(self.book_db)
@@ -187,12 +191,12 @@ class BookDB:
 
             picture = row[16]
             # tagenum=MyEnum(enum.Enum)
-            thelist=[]#由于没有列表类型，故使用将列表转为text的办法
+            thelist = []  # 由于没有列表类型，故使用将列表转为text的办法
             for tag in tags.split("\n"):
                 if tag.strip() != "":
                     # book.tags.append(tag)
                     thelist.append(tag)
-            book.tags=str(thelist)#解析成list请使用eval()
+            book.tags = str(thelist)  # 解析成list请使用eval()
             book.picture = None
             # thelistforpic=[]
             # for i in range(0, random.randint(0, 9)):
@@ -205,22 +209,23 @@ class BookDB:
                 # plt.axis('off')
                 # plt.show()
 
-
                 # encode_str = base64.b64encode(picture).decode('utf-8')
                 # # book.pictures.append(encode_str)
                 # print(type(encode_str))
-                book.picture=picture
+                book.picture = picture
 
             session.add(book)
         session.commit()
         # 关闭session
         session.close()
-    def send_info(self):
-        bookdb.send_info_to_db(0, bookdb.get_book_count())#count=100 or 整张表
-if __name__ == '__main__':
 
+    def send_info(self):
+        bookdb.send_info_to_db(0, bookdb.get_book_count())  # count=100 or 整张表
+
+
+if __name__ == '__main__':
     # bookdb=BookDB()#单进程0.7148709297180176 多进程2.212113380432129
-    bookdb=BookDB(large=False)#导入整张表 43988数据 还没跑通 不知道多进程会不会比单进程快
+    bookdb = BookDB(large=False)  # 导入整张表 43988数据 还没跑通 不知道多进程会不会比单进程快
     # 单进程1033.8140s 多进程1035.624s 无任何速度提升
     print(bookdb.get_book_count())
     # for i in bookdb.get_book_info(0,bookdb.get_book_count()):

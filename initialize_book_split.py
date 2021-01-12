@@ -8,17 +8,16 @@ import psycopg2
 from datetime import datetime, time
 
 url = 'postgresql://{}:{}@{}:{}/{}'
-user='postgres'
-password='zxcvbnm'
-host='localhost'
-port='5432'
-db='bookstore'
+user = 'postgres'
+password = 'zxcvbnm'
+host = 'localhost'
+port = '5432'
+db = 'bookstore'
 url = url.format(user, password, host, port, db)
 engine = create_engine(url)
 # engine = create_engine(Conf.get_sql_conf('local'))
 
 Base = declarative_base()
-
 
 
 def init():
@@ -68,10 +67,11 @@ def add_fts():
     # 关闭session
     session.close()
 
+
 if __name__ == "__main__":
     # 创建数据库
     init()
     # 分词
     split()
-    #建索引
+    # 建索引
     add_fts()

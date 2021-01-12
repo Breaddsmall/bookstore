@@ -1,4 +1,3 @@
-
 error_code = {
     401: "authorization fail.",
     511: "non exist user id {}",
@@ -13,7 +12,7 @@ error_code = {
     520: "unpayable order id {}",
     521: "unshippable order id {}",
     522: "unreceivable order id {}",
-    523: "",
+    523: "uncancellable order id {}",
     524: "",
     525: "",
     526: "",
@@ -39,11 +38,11 @@ def error_exist_store_id(store_id):
 
 
 def error_non_exist_book_id(book_id):
-    return 515,  error_code[515].format(book_id)
+    return 515, error_code[515].format(book_id)
 
 
 def error_exist_book_id(book_id):
-    return 516,  error_code[516].format(book_id)
+    return 516, error_code[516].format(book_id)
 
 
 def error_stock_level_low(book_id):
@@ -57,17 +56,26 @@ def error_invalid_order_id(order_id):
 def error_not_sufficient_funds(order_id):
     return 519, error_code[519].format(order_id)
 
+
 def error_unpayable_order(order_id):
     return 520, error_code[520].format(order_id)
+
 
 def error_unshippable_order(order_id):
     return 521, error_code[521].format(order_id)
 
+
 def error_unreceivable_order(order_id):
     return 522, error_code[522].format(order_id)
 
+
+def error_uncancellable_order(order_id):
+    return 523, error_code[523].format(order_id)
+
+
 def error_authorization_fail():
     return 401, error_code[401]
+
 
 def error_and_message(code, message):
     return code, message

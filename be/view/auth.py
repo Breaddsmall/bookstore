@@ -53,12 +53,14 @@ def change_password():
     code, message = u.change_password(user_id=user_id, old_password=old_password, new_password=new_password)
     return jsonify({"message": message}), code
 
+
 @bp_auth.route("/search_author", methods=["POST"])
 def search_author():
     author = request.json.get("author", "")
     u = user.User()
     code, message = u.search_author(author=author)
     return jsonify({"message": message}), code
+
 
 @bp_auth.route("/search_book_intro", methods=["POST"])
 def search_book_intro():
@@ -67,12 +69,14 @@ def search_book_intro():
     code, message = u.search_book_intro(book_intro=book_intro)
     return jsonify({"message": message}), code
 
+
 @bp_auth.route("/search_tags", methods=["POST"])
 def search_tags():
     tags = request.json.get("tags", "")
     u = user.User()
     code, message = u.search_tags(tags=tags)
     return jsonify({"message": message}), code
+
 
 @bp_auth.route("/search_title", methods=["POST"])
 def search_title():
@@ -81,13 +85,15 @@ def search_title():
     code, message = u.search_title(title=title)
     return jsonify({"message": message}), code
 
+
 @bp_auth.route("/search_author_in_store", methods=["POST"])
 def search_author_in_store():
     author = request.json.get("author", "")
     store_id = request.json.get("store_id", "")
     u = user.User()
-    code, message = u.search_author_in_store(author=author,store_id=store_id)
+    code, message = u.search_author_in_store(author=author, store_id=store_id)
     return jsonify({"message": message}), code
+
 
 @bp_auth.route("/search_book_intro_in_store", methods=["POST"])
 def search_book_intro_in_store():
@@ -97,6 +103,7 @@ def search_book_intro_in_store():
     code, message = u.search_book_intro_in_store(book_intro=book_intro, store_id=store_id)
     return jsonify({"message": message}), code
 
+
 @bp_auth.route("/search_tags_in_store", methods=["POST"])
 def search_tags_in_store():
     tags = request.json.get("tags", "")
@@ -105,12 +112,13 @@ def search_tags_in_store():
     code, message = u.search_tags_in_store(tags=tags, store_id=store_id)
     return jsonify({"message": message}), code
 
+
 @bp_auth.route("/search_title_in_store", methods=["POST"])
 def search_title_in_store():
     title = request.json.get("title", "")
     store_id = request.json.get("store_id", "")
     u = user.User()
-    code, message = u.search_title_in_store(title=title,store_id=store_id)
+    code, message = u.search_title_in_store(title=title, store_id=store_id)
     return jsonify({"message": message}), code
 
 
@@ -129,3 +137,35 @@ def search_book_intro_index_version_in_store():
     u = user.User()
     code, message = u.search_book_intro_index_version_in_store(book_intro=book_intro, store_id=store_id)
     return jsonify({"message": message}), code
+
+
+@bp_auth.route("/search_all_order", methods=["POST"])
+def search_all_order():
+    user_id = request.json.get("user_id", "")
+    password = request.json.get("password", "")
+    store_id = request.json.get("store_id", "")
+    condition = request.json.get("condition", "")
+    is_buyer = bool(int(request.json.get("is_buyer", "")))
+    u = user.User()
+    code, message, result = u.search_all_order(user_id, password, store_id, condition, is_buyer)
+    return jsonify({"message": message, "result": result}), code
+
+
+@bp_auth.route("/search_order_detail", methods=["POST"])
+def search_order_detail():
+    user_id = request.json.get("user_id", "")
+    password = request.json.get("password", "")
+    order_id = request.json.get("order_id", "")
+    is_buyer = bool(int(request.json.get("is_buyer", "")))
+    u = user.User()
+    code, message, result = u.search_order_detail(user_id, password, order_id, is_buyer)
+    return jsonify({"message": message, "result": result}), code
+
+
+@bp_auth.route("/check_balance", methods=["POST"])
+def check_balance():
+    user_id = request.json.get("user_id", "")
+    password = request.json.get("password", "")
+    u = user.User()
+    code, message, result = u.check_balance(user_id, password)
+    return jsonify({"message": message, "result": result}), code

@@ -19,7 +19,7 @@ class Seller:
             "user_id": self.seller_id,
             "store_id": store_id,
         }
-        #print(simplejson.dumps(json))
+        # print(simplejson.dumps(json))
         url = urljoin(self.url_prefix, "create_store")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
@@ -32,7 +32,7 @@ class Seller:
             "book_info": book_info.__dict__,
             "stock_level": stock_level
         }
-        #print(simplejson.dumps(json))
+        # print(simplejson.dumps(json))
         url = urljoin(self.url_prefix, "add_book")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
@@ -45,17 +45,42 @@ class Seller:
             "book_id": book_id,
             "add_stock_level": add_stock_num
         }
-        #print(simplejson.dumps(json))
+        # print(simplejson.dumps(json))
         url = urljoin(self.url_prefix, "add_stock_level")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
-    def send_out(self, seller_id: str, order_id: str):
-        json={
-            "seller_id":seller_id,
-            "order_id":order_id
+
+    def ship(self, user_id: str, order_id: str):
+        json = {
+            "user_id": user_id,
+            "order_id": order_id
         }
-        url = urljoin(self.url_prefix, "send_out")
+        url = urljoin(self.url_prefix, "ship")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code
+
+    def check_s_balance(self, user_id: str, password: str, store_id: str):
+        json = {
+            "user_id": user_id,
+            "password": password,
+            "store_id": store_id,
+        }
+        url = urljoin(self.url_prefix, "check_s_balance")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code
+
+    def check_stock(self, seller_id: str, password: str, store_id: str, book_id: str) -> int:
+        json = {
+            "user_id": seller_id,
+            "password": password,
+            "store_id": store_id,
+            "book_id": book_id,
+        }
+        # print(simplejson.dumps(json))
+        url = urljoin(self.url_prefix, "check_stock")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
         return r.status_code

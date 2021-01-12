@@ -2,6 +2,7 @@ import requests
 from urllib.parse import urljoin
 import sqlalchemy
 
+
 class Auth:
     def __init__(self, url_prefix):
         self.url_prefix = urljoin(url_prefix, "auth/")
@@ -13,9 +14,9 @@ class Auth:
         return r.status_code, r.json().get("token")
 
     def register(
-        self,
-        user_id: str,
-        password: str
+            self,
+            user_id: str,
+            password: str
     ) -> int:
         json = {
             "user_id": user_id,
@@ -105,5 +106,24 @@ class Auth:
     def search_book_intro_index_version_in_store(self, book_intro: str, store_id: str) -> int:
         json = {"book_intro": book_intro, "store_id": store_id}
         url = urljoin(self.url_prefix, "search_book_intro_in_store")
+        r = requests.post(url, json=json)
+        return r.status_code
+
+    def search_all_order(self, user_id: str, password: str, store_id: str, condition: str, is_buyer: str):
+        json = {"user_id": user_id, "password": password, "store_id": store_id, "condition": condition,
+                "is_buyer": is_buyer}
+        url = urljoin(self.url_prefix, "search_all_order")
+        r = requests.post(url, json=json)
+        return r.status_code
+
+    def search_order_detail(self, user_id: str, password: str, order_id: str, is_buyer: str):
+        json = {"user_id": user_id, "password": password, "order_id": order_id, "is_buyer": is_buyer}
+        url = urljoin(self.url_prefix, "search_order_detail")
+        r = requests.post(url, json=json)
+        return r.status_code
+
+    def check_balance(self, user_id: str, password: str):
+        json = {"user_id": user_id, "password": password}
+        url = urljoin(self.url_prefix, "check_balance")
         r = requests.post(url, json=json)
         return r.status_code

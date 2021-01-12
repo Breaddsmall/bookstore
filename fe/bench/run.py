@@ -17,6 +17,5 @@ def run_bench():
     for ss in sessions:
         ss.join()
 
-
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 #    run_bench()

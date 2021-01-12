@@ -12,17 +12,16 @@ from datetime import datetime, time
 from sqlalchemy_utils import create_database, database_exists
 
 url = 'postgresql://{}:{}@{}:{}/{}'
-user='postgres'
-password='123456'
-host='localhost'
-port='5432'
-db='bookstore'
+user = 'postgres'
+password = '123456'
+host = 'localhost'
+port = '5432'
+db = 'bookstore'
 url = url.format(user, password, host, port, db)
 engine = create_engine(url)
 # engine = create_engine(Conf.get_sql_conf('local'))
 
 Base = declarative_base()
-
 
 
 def init():
@@ -72,6 +71,7 @@ def add_info():
     session.commit()
     # 关闭session
     session.close()
+
 
 if __name__ == "__main__":
     # 创建数据库

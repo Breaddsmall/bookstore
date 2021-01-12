@@ -25,7 +25,7 @@ class Store:
         if not database_exists(engine.url):
             init()
         # engine = create_engine(Conf.get_sql_conf('local'))
-        #engine = create_engine(Conf.get_sql_conf('local'))
+        # engine = create_engine(Conf.get_sql_conf('local'))
         Base = declarative_base()
         DBSession = sessionmaker(bind=engine)
         self.session = DBSession()
