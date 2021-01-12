@@ -51,9 +51,9 @@ class Seller:
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
 
-    def ship(self, user_id: str, order_id: str):
+    def ship(self, seller_id: str, order_id: str):
         json = {
-            "user_id": user_id,
+            "user_id": seller_id,
             "order_id": order_id
         }
         url = urljoin(self.url_prefix, "ship")
