@@ -54,6 +54,8 @@ class TestCheckSBalance:
         code,s_balance = self.seller.check_s_balance(self.seller_id,self.store_id)
         assert code == 200
         assert s_balance == self.total_price
+        code = self.seller.ship(self.seller_id,self.order_id)
+        assert code == 200
         code = self.buyer.receive(self.order_id)
         assert code == 200
         code, s_balance = self.seller.check_s_balance(self.seller_id, self.store_id)
