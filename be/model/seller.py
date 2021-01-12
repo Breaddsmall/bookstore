@@ -88,7 +88,7 @@ class Seller(db_conn.DBConn):
                 return error.error_non_exist_store_id(store_id)
             if condition != "paid":
                 return error.error_unshippable_order(order_id)
-            self.conn.execute("UPDATE new_order set condition ='shipped' WHERE order_id = ?", (order_id,))
+            self.conn.execute("UPDATE new_order set condition ='shipped' WHERE order_id = '%s';"%(order_id,))
             self.conn.commit()
             execute_job(order_id, 1)
             print("物品已发货")
