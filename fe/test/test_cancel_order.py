@@ -9,7 +9,7 @@ from fe.access.book import Book
 import uuid
 
 
-class TestReceive:
+class TestCancelOrder:
     seller_id: str
     store_id: str
     buyer_id: str
@@ -21,7 +21,7 @@ class TestReceive:
 
     @pytest.fixture(autouse=True)
     def pre_run_initialization(self):
-        self.seller_id = "test_cancel_odrder_seller_id_{}".format(str(uuid.uuid1()))
+        self.seller_id = "test_cancel_order_seller_id_{}".format(str(uuid.uuid1()))
         self.store_id = "test_cancel_order_store_id_{}".format(str(uuid.uuid1()))
         self.buyer_id = "test_cancel_order_buyer_id_{}".format(str(uuid.uuid1()))
         self.password = self.seller_id
