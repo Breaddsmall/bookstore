@@ -9,15 +9,22 @@ import threading
 class myThread(threading.Thread):
     def __init__(self, threadID, name, order_id, mode):
         threading.Thread.__init__(self)
+
         self.threadID = threadID
-        self.name = name
-        self.order_id = order_id
-        self.job = job[mode]
+        self.name:str = name
+        self.order_id:str = order_id
+        self.mode = mode
 
     def run(self):
-        print("开始线程：" + self.name)
-        self.job(self.name, self.order_id)
-        print("退出线程：" + self.name)
+        #print("开始线程：" + self.name)
+        A=Auto_job()
+        sleep(3)
+        if self.mode==0:
+            A.auto_cancel(self.order_id)
+        else:
+            A.auto_receive(self.order_id)
+        #print("退出线程：" + self.name)
+
 
 
 class Auto_job(db_conn.DBConn):
@@ -25,26 +32,23 @@ class Auto_job(db_conn.DBConn):
     def __init__(self):
         db_conn.DBConn.__init__(self)
 
-    def auto_cancel(self, threadName: str, order_id: str):
-        sleep(30)
+    def auto_cancel(self, order_id: str):
         self.conn.execute("UPDATE new_order SET condition = 'cancelled' "
-                          "WHERE order_id = '%s' and condition = 'unpaid';" % (order_id))
-        threadName.exit()
+                          "WHERE order_id = '%s' AND condition = 'unpaid';" % (order_id))
+        self.conn.commit()
+        print("修改完毕"+order_id)
+        exit(0)
 
-    def auto_receive(self, threadName: str, order_id: str) -> (int, str):
-        sleep(30)
+    def auto_receive(self, order_id: str) -> (int, str):
         self.conn.execute("UPDATE new_order SET condition = 'received' "
-                          "WHERE order_id = '%s' and condition = 'shipped';" % (order_id))
-        threadName.exit()
+                          "WHERE order_id = '%s' AND condition = 'shipped';" % (order_id))
+        self.conn.commit()
+        exit(0)
 
 
-job = {
-    0: Auto_job.auto_cancel(),
-    1: Auto_job.auto_receive()
-}
 
 
 def execute_job(order_id, mode):
     thread = myThread("ID" + order_id, "name" + order_id, order_id, mode)
     thread.start()
-    thread.join()
+

@@ -67,7 +67,7 @@ class User(db_conn.DBConn):
                 "INSERT INTO usr (user_id, password, balance, token, terminal) values ('%s', '%s', 0, '%s', '%s')" % (
                     user_id, password, token, terminal))
             self.conn.commit()
-            print("注册成功")
+            #print("注册成功",user_id)
         except sqlalchemy.exc.IntegrityError:
             return error.error_exist_user_id(user_id)
         return 200, "ok"
@@ -96,7 +96,7 @@ class User(db_conn.DBConn):
         if password != row[0]:
             print("密码不正确")
             return error.error_authorization_fail()
-        print("password正确")
+        #print("password正确")
         return 200, "ok"
 
     def login(self, user_id: str, password: str, terminal: str) -> (int, str, str):
@@ -108,11 +108,11 @@ class User(db_conn.DBConn):
             if code != 200:
                 return code, message, ""
             token = jwt_encode(user_id, terminal)
-            print(1)
+            #print(1)
 
             cursor = self.conn.execute(
                 "UPDATE usr set token= '%s' , terminal = '%s' where user_id = '%s'" % (token, terminal, user_id))
-            print(2)
+            #print(2)
             if cursor.rowcount == 0:
                 return error.error_authorization_fail() + ("",)
             self.conn.commit()

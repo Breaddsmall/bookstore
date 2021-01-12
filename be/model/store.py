@@ -29,5 +29,5 @@ class Store:
         Base = declarative_base()
         DBSession = sessionmaker(bind=engine)
         self.session = DBSession()
-        print("数据库连接成功")
+        #print("数据库连接成功")
         return self.session

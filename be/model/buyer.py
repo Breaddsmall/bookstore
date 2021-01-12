@@ -63,6 +63,7 @@ class Buyer(db_conn.DBConn):
                 % (uid, store_id, user_id, total_price))
 
             self.conn.commit()
+            #print("下单成功")
             order_id = uid
             execute_job(order_id, 0)
 
@@ -89,7 +90,8 @@ class Buyer(db_conn.DBConn):
             store_id = row[1]
             total_price = row[2]
             condition = row[3]
-            time.sleep(0.01)  # 防止并发导致的逻辑错误
+            #time.sleep(0.5)  # 防止并发导致的查询顺序错误
+            print(condition,order_id)
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
@@ -97,6 +99,7 @@ class Buyer(db_conn.DBConn):
             if condition != "unpaid":
                 # print(condition,order_id)
                 # print("oh"+str(time.time()))
+                # print(order_id,condition)
                 return error.error_unpayable_order(order_id)
 
             cursor = self.conn.execute("SELECT balance, password FROM usr WHERE user_id = '%s';" % (buyer_id))
