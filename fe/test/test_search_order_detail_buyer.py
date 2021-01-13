@@ -48,6 +48,9 @@ class TestSearchOrderDetailBuyer:
         self.buyer.password = self.buyer.password + "_x"
         code = self.buyer.search_order_detail_buyer(self.order_id)
         assert code != 200
+        self.buyer.user_id = self.buyer.user_id + "_x"
+        code = self.buyer.search_order_detail_buyer(self.order_id)
+        assert code != 200
 
     def test_ok_condition_unpaid(self):
         code, count, condition = self.buyer.search_order_detail_buyer(self.order_id)

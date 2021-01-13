@@ -123,17 +123,18 @@ class Seller(db_conn.DBConn):
             cursor = self.conn.execute("SELECT password FROM usr WHERE user_id='%s';" % (user_id,))
             row = cursor.fetchone()
             if row is None:
-                return error.error_authorization_fail()+("")
+                return error.error_authorization_fail()+({"book_id": [], "stock_level": []})
 
             if row[0] != password:
-                return error.error_authorization_fail()+("")
+                return error.error_authorization_fail()+({"book_id": [], "stock_level": []})
 
             cursor = self.conn.execute(
                 "SELECT store_id FROM user_store WHERE user_id = '%s' AND store_id = '%s';" % (user_id, store_id))
             row = cursor.fetchone()
             if row is None:
-                return error.error_non_exist_store_id(store_id)+("")
+                return error.error_non_exist_store_id(store_id)+({"book_id": [], "stock_level": []})
 
+            book_id_p=""
             if book_id != "":
                 book_id_p = "AND book_id = '%s'" % (book_id)
 
@@ -145,11 +146,12 @@ class Seller(db_conn.DBConn):
             for row in cursor:
                 book_id_list.append(row[0])
                 stock_level_list.append(row[1])
-            msg = jsonify({"book_id": book_id_list, "stock_level": stock_level_list})
+            msg = {"book_id": book_id_list, "stock_level": stock_level_list}
         except sqlalchemy.exc.IntegrityError as e:
-            return 528, "{}".format(str(e)),""
+            return 528, "{}".format(str(e)),{"book_id": [], "stock_level": []}
         except BaseException as e:
-            return 530, "{}".format(str(e)),""
+            print(e)
+            return 530, "{}".format(str(e)),{"book_id": [], "stock_level": []}
         return 200, "ok", msg
 
     def search_all_order_seller(self, user_id: str, password: str, store_id: str, condition: str):

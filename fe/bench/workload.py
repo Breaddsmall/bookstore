@@ -7,7 +7,7 @@ from fe.access.new_seller import register_new_seller
 from fe.access.new_buyer import register_new_buyer
 from fe.access.buyer import Buyer
 from fe import conf
-logging.basicConfig(level=logging.INFO,filename="log.txt")
+logging.basicConfig(level=logging.WARNING,filename="log.txt")
 
 class NewOrder:
     def __init__(self, buyer: Buyer, store_id, book_id_and_count):

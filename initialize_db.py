@@ -77,18 +77,6 @@ def init():
     # 关闭session
     session.close()
 
-
-def add_info():
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-    session.execute("INSERT INTO usr values('lh','123456',0,'asdqweq','qweasdasfz')")
-    session.commit()
-    # 关闭session
-    session.close()
-
-
 if __name__ == "__main__":
     # 创建数据库
     init()
-    # 加入信息
-    add_info()

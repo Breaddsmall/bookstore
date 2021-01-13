@@ -48,6 +48,9 @@ class TestSearchAllOrderBuyer:
         self.seller.password = self.seller.password + "_x"
         code = self.seller.search_all_order_seller(self.store_id)
         assert code != 200
+        self.seller.seller_id = self.seller.seller_id + "_x"
+        code = self.seller.search_all_order_seller(self.store_id)
+        assert code != 200
 
     def test_condition_paid(self):
         code = self.buyer.add_funds(self.total_price)
